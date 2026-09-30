@@ -28,7 +28,7 @@ from core.hybrid_pipeline import HybridSpeechEnhancer
 from core.metrics import AudioMetricsEvaluator
 from core.synthetic_bench import SyntheticAudioBenchmark
 
-PORT = 8501
+PORT = int(os.environ.get("PORT", 8501))
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 DEMO_DIR = os.path.join(os.path.dirname(__file__), "demo_outputs")
 
@@ -290,9 +290,9 @@ class PrototypeAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(err_body)
 
 def start_server(port=PORT):
-    server_address = ('', port)
+    server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, PrototypeAPIHandler)
-    print(f"\n[+] Speech Enhancement Web Server running at: http://localhost:{port}")
+    print(f"\n[+] Speech Enhancement Web Server running at: http://0.0.0.0:{port}")
     print(f"[+] Web Dashboard URL: http://localhost:{port}/index.html\n")
     try:
         httpd.serve_forever()
@@ -301,5 +301,5 @@ def start_server(port=PORT):
         httpd.server_close()
 
 if __name__ == '__main__':
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
+    port = int(os.environ.get("PORT", sys.argv[1] if len(sys.argv) > 1 else PORT))
     start_server(port)

@@ -1,0 +1,88 @@
+name: CI & Deployment Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run DSP Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsndfile1
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pipeline Unit & Stress Tests
+        run: |
+          python -m unittest tests/test_pipeline.py
+
+  docker-check:
+    name: Validate Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: speech-enhancement-prototype:latest
+
+  deploy:
+    name: Deploy to Cloud
+    needs: [test, docker-check]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "🚀 Triggering cloud deployment via Render Deploy Hook..."
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+            HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "Response: $BODY"
+            echo "HTTP Status: $HTTP_STATUS"
+            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+              echo "✅ Deployment triggered successfully on Render!"
+            else
+              echo "❌ Render deploy hook returned status: $HTTP_STATUS"
+              exit 1
+            fi
+          else
+            echo "ℹ️ RENDER_DEPLOY_HOOK_URL secret not configured in GitHub repository."
+            echo "👉 To enable automatic deployment triggers:"
+            echo "   1. Create a free Web Service on Render (https://render.com) connected to this repo."
+            echo "   2. Copy the 'Deploy Hook' URL from your Render service settings."
+            echo "   3. Add it as a secret named 'RENDER_DEPLOY_HOOK_URL' in GitHub Repo Settings -> Secrets."
+            echo "   Note: Render also auto-deploys out of the box whenever you push to main!"
+          fi

@@ -3,6 +3,7 @@
 ### Hybrid Multi-Stage Denoising Engine for Stationary, Non-Stationary, and Impulsive Background Noises
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![CI & Deployment Pipeline](https://github.com/Poovitha252006/speech-enhancement-prototype/actions/workflows/deploy.yml/badge.svg)](https://github.com/Poovitha252006/speech-enhancement-prototype/actions/workflows/deploy.yml)
 [![Status: Production Ready](https://img.shields.io/badge/status-ready%20to%20submit-brightgreen.svg)]()
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)]()
 
@@ -41,7 +42,24 @@ All input, output, and removed-noise `.wav` files are generated and saved direct
 python -m unittest tests/test_pipeline.py
 ```
 
----
+### 4. Deploy Live via GitHub Actions & Render
+This repository includes a production **GitHub Actions CI/CD Pipeline** (`.github/workflows/deploy.yml`), a `Dockerfile`, and a `render.yaml` blueprint.
+
+**Deploying in 1 minute on Render (Free Tier):**
+1. Log in to [Render](https://render.com) using your GitHub account.
+2. Click **New +** -> **Web Service**.
+3. Select your repository `Poovitha252006/speech-enhancement-prototype`.
+4. Render automatically detects the configuration and sets:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `python server.py`
+5. Click **Deploy Web Service** — in under 2 minutes your dashboard will be live at `https://speech-enhancement-prototype.onrender.com`!
+
+**Automating with GitHub Actions:**
+- Copy the **Deploy Hook** URL from Render service settings:
+  - In your GitHub repo: `Settings` -> `Secrets and variables` -> `Actions` -> `New repository secret`.
+  - Name: `RENDER_DEPLOY_HOOK_URL`
+  - Value: `<your-render-deploy-hook-url>`
+- Every push to `main` will now run tests across Python 3.10-3.12 and trigger automatic cloud deployment!
 
 ## 📊 Experimental Results & Benchmarks
 
