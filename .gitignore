@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Temporary generated test audio scratch files
+test_*.wav
+raw_input.wav
+speech_preserved_*.wav
+uploaded_*.wav
+improved_clean_output.wav
+complete_clean_speech_output.wav
+final_speech_preserved.wav
+enhanced_speech_2_degraded.wav
+original_speech_2.wav
+input_audio_3.wav
+enhanced_audio_3_reference.wav
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
